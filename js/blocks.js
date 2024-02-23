@@ -1320,11 +1320,31 @@ class Blocks {
             }
 
             let thisBlockobj = this.blockList[thisBlock];
-            if (thisBlockobj.name === "vspace") {
+
+            // Do not remove the silence block if the user places a block just over it.
+            if (
+                thisBlockobj?.name === "vspace" &&
+                this.blockList[thisBlockobj.connections[1]]?.name === "rest2" &&
+                this.blockList[thisBlockobj.connections[0]]?.name === "vspace"
+              ) {
                 return;
             }
 
             thisBlockobj = this.blockList[thisBlock];
+
+            // Do not remove the silence block if only vspace blocks are added before the silence block.
+
+            let block = thisBlockobj;
+            while (block?.name == "vspace") {
+                if (block?.name != "vspace") {
+                    break;
+                }
+                block = this.blockList[block.connections[0]];
+                if (block?.name == "newnote") {
+                    return;
+                }
+            }
+            
             if (thisBlockobj.name === "rest2") {
                 this._deletePitchBlocks(thisBlock);
             } else {
@@ -1364,6 +1384,12 @@ class Blocks {
          */
         this.deletePreviousDefault = (thisBlock) => {
             let thisBlockobj = this.blockList[thisBlock];
+
+            // Do not remove the silence block if only a vspace block is inserted after the silence block.
+            if (this.blockList[thisBlockobj.connections[0]]?.name === "rest2" && this.blockList[thisBlock]?.name === "vspace") {
+                return thisBlockobj.connections[0];
+            }
+
             if (this._blockInStack(thisBlock, ["rest2"])) {
                 this._deletePitchBlocks(thisBlock);
                 return this.blockList[thisBlock].connections[0];
@@ -2122,10 +2148,29 @@ class Blocks {
          */
         this._testConnectionType = (type1, type2) => {
             /** Can these two blocks dock? */
+            if (type1 === "vspaceout" && type2 === "vspacein") {
+                return true;
+            }
+            if (type1 === "vspacein" && type2 === "vspaceout") {
+                return true;
+            }
+            
             if (type1 === "in" && type2 === "out") {
                 return true;
             }
             if (type1 === "out" && type2 === "in") {
+                return true;
+            }
+            if (type1 === "in" && type2 === "vspaceout") {
+                return true;
+            }
+            if (type1 === "vspaceout" && type2 === "in") {
+                return true;
+            }
+            if (type1 === "out" && type2 === "vspacein") {
+                return true;
+            }
+            if (type1 === "vspacein" && type2 === "out") {
                 return true;
             }
             if (type1 === "numberin" && ["numberout", "anyout"].indexOf(type2) !== -1) {
@@ -2168,6 +2213,18 @@ class Blocks {
                 return true;
             }
             if (type1 === "caseout" && type2 === "casein") {
+                return true;
+            }
+            if (type1 === "vspaceout" && type2 === "casein") {
+                return true;
+            }
+            if (type1 === "casein" && type2 === "vspaceout") {
+                return true;
+            }
+            if (type1 === "vspacein" && type2 === "caseout") {
+                return true;
+            }
+            if (type1 === "caseout" && type2 === "vspacein") {
                 return true;
             }
             if (
@@ -4952,11 +5009,19 @@ class Blocks {
 
             /** Reposition the paste location relative to the stage position. */
             if (this.selectedBlocksObj != null) {
-                this.selectedBlocksObj[0][2] = 175 - this.activity.blocksContainer.x + this.pasteDx;
-                this.selectedBlocksObj[0][3] = 75 - this.activity.blocksContainer.y + this.pasteDy;
-                this.pasteDx += 21;
-                this.pasteDy += 21;
+                if (docById("helpfulWheelDiv").style.display !== "none") {
+                    this.selectedBlocksObj[0][2] = docById("helpfulWheelDiv").offsetLeft + 240 - this.activity.blocksContainer.x;
+                    this.selectedBlocksObj[0][3] = docById("helpfulWheelDiv").offsetTop + 130 - this.activity.blocksContainer.y;
+
+                    docById("helpfulWheelDiv").style.display = "none";
+                } else {
+                    this.selectedBlocksObj[0][2] = 175 - this.activity.blocksContainer.x + this.pasteDx;
+                    this.selectedBlocksObj[0][3] = 75 - this.activity.blocksContainer.y + this.pasteDy;
+                    this.pasteDx += 21;
+                    this.pasteDy += 21;
+                }
                 this.loadNewBlocks(this.selectedBlocksObj);
+                this.activity.__tick();
             }
         };
 

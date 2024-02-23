@@ -65,7 +65,7 @@ if (_THIS_IS_TURTLE_BLOCKS_) {
 
     if (GUIDEURL === "guide url" || GUIDEURL === "") {
         GUIDEURL =
-            "https://github.com/sugarlabs/musicblocks/tree/master/guide/README.md";
+            "../guide/guide.html";
     }
 
     NUMBERBLOCKDEFAULT = 4;
@@ -501,8 +501,8 @@ const createHelpContent = (activity) => {
             window.btoa(base64Encode(RECORDBUTTON))
     ]);
     HELPCONTENT.push([
-        _("Full screen"),
-        _("Toggle full screen mode."),
+        _("Toggle Fullscreen"),
+        _("Toggle Fullscreen mode."),
         "data:image/svg+xml;base64," +
             window.btoa(base64Encode(FULLSCREENBUTTON))
     ]);
